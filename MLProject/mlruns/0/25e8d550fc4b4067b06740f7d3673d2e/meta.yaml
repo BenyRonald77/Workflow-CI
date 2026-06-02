@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/Dicoding/Workflow-CI/MLProject/mlruns/0/25e8d550fc4b4067b06740f7d3673d2e/artifacts
+end_time: 1780413015569
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 25e8d550fc4b4067b06740f7d3673d2e
+run_name: ambitious-panda-329
+run_uuid: 25e8d550fc4b4067b06740f7d3673d2e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1780413015510
+status: 3
+tags: []
+user_id: KOMPUTER
