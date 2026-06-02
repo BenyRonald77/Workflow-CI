@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -32,46 +33,61 @@ def load_data():
     return X_train, X_test, y_train, y_test
 
 
-def main():
-    base_dir = Path(__file__).resolve().parent
-
-    mlflow.set_tracking_uri(f"file:{base_dir / 'mlruns'}")
-    mlflow.set_experiment("Diabetes_CI_Experiment")
-
+def train_model():
     X_train, X_test, y_train, y_test = load_data()
 
     mlflow.sklearn.autolog()
 
-    with mlflow.start_run(run_name="RandomForest_CI_Run"):
-        model = RandomForestClassifier(
-            n_estimators=100,
-            max_depth=5,
-            random_state=42
-        )
+    model = RandomForestClassifier(
+        n_estimators=100,
+        max_depth=5,
+        random_state=42
+    )
 
-        model.fit(X_train, y_train)
+    model.fit(X_train, y_train)
 
-        y_pred = model.predict(X_test)
-        y_proba = model.predict_proba(X_test)[:, 1]
+    y_pred = model.predict(X_test)
+    y_proba = model.predict_proba(X_test)[:, 1]
 
-        accuracy = accuracy_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred, zero_division=0)
-        recall = recall_score(y_test, y_pred, zero_division=0)
-        f1 = f1_score(y_test, y_pred, zero_division=0)
-        roc_auc = roc_auc_score(y_test, y_proba)
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, zero_division=0)
+    recall = recall_score(y_test, y_pred, zero_division=0)
+    f1 = f1_score(y_test, y_pred, zero_division=0)
+    roc_auc = roc_auc_score(y_test, y_proba)
 
-        mlflow.log_metric("test_accuracy", accuracy)
-        mlflow.log_metric("test_precision", precision)
-        mlflow.log_metric("test_recall", recall)
-        mlflow.log_metric("test_f1_score", f1)
-        mlflow.log_metric("test_roc_auc", roc_auc)
+    mlflow.log_metric("test_accuracy", accuracy)
+    mlflow.log_metric("test_precision", precision)
+    mlflow.log_metric("test_recall", recall)
+    mlflow.log_metric("test_f1_score", f1)
+    mlflow.log_metric("test_roc_auc", roc_auc)
 
-        print("CI training selesai.")
-        print(f"Accuracy : {accuracy:.4f}")
-        print(f"Precision: {precision:.4f}")
-        print(f"Recall   : {recall:.4f}")
-        print(f"F1 Score : {f1:.4f}")
-        print(f"ROC AUC  : {roc_auc:.4f}")
+    mlflow.set_tag("model_name", "RandomForestClassifier")
+    mlflow.set_tag("project", "Workflow-CI")
+    mlflow.set_tag("dataset", "Diabetes")
+
+    print("CI training selesai.")
+    print(f"Accuracy : {accuracy:.4f}")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall   : {recall:.4f}")
+    print(f"F1 Score : {f1:.4f}")
+    print(f"ROC AUC  : {roc_auc:.4f}")
+
+
+def main():
+    base_dir = Path(__file__).resolve().parent
+    mlflow.set_tracking_uri(f"file:{base_dir / 'mlruns'}")
+
+    # Jika dijalankan dari MLflow Project, MLflow sudah punya run ID otomatis.
+    # Jadi kita pakai run tersebut, bukan membuat run baru yang berbeda.
+    active_run_id = os.environ.get("MLFLOW_RUN_ID")
+
+    if active_run_id:
+        with mlflow.start_run(run_id=active_run_id):
+            train_model()
+    else:
+        mlflow.set_experiment("Diabetes_CI_Experiment")
+        with mlflow.start_run(run_name="RandomForest_CI_Run"):
+            train_model()
 
 
 if __name__ == "__main__":
